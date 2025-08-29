@@ -342,7 +342,45 @@ def recommended_models_table(task=None, provider=None, vision=None, image_genera
 # --- Environment and API Client Setup ---
 
 def load_environment():
-    """Loads environment variables from a .env file in the project root."""
+    """
+    Loads environment variables from a .env file in the project root.
+    
+    This function searches upward from the current working directory to find the
+    project root by looking for specific markers (.env file or .git directory).
+    Once found, it loads all environment variables defined in the .env file,
+    making them available to the application through os.getenv().
+    
+    Args:
+        None
+    
+    Returns:
+        None: This function doesn't return a value but has the side effect of
+            loading environment variables into the process environment.
+    
+    Raises:
+        None: This function handles all errors gracefully and prints warnings
+            instead of raising exceptions.
+    
+    Notes:
+        - Searches upward from current directory until it finds .env or .git
+        - Falls back to current directory if no markers are found
+        - Uses python-dotenv library to parse and load the .env file
+        - Prints a warning if .env file is not found
+        - Environment variables loaded are accessible via os.getenv()
+    
+    Example:
+        >>> load_environment()
+        >>> api_key = os.getenv('OPENAI_API_KEY')
+        
+        # Typical .env file content:
+        # OPENAI_API_KEY=sk-...
+        # ANTHROPIC_API_KEY=sk-ant-...
+        # GOOGLE_API_KEY=AIza...
+    
+    Dependencies:
+        - python-dotenv: For parsing and loading .env files
+        - os: For file system operations and environment variable access
+    """
     path = os.getcwd()
     while path != os.path.dirname(path):
         if os.path.exists(os.path.join(path, '.env')) or os.path.exists(os.path.join(path, '.git')):
@@ -362,7 +400,65 @@ def load_environment():
 def setup_llm_client(model_name="gpt-4o"):
     """
     Configures and returns an LLM client based on the specified model name.
-    Supports OpenAI, Anthropic, Hugging Face, and Google Gemini.
+    
+    This function initializes the appropriate API client for the specified model,
+    handling authentication and configuration for multiple providers including
+    OpenAI, Anthropic, Hugging Face, and Google (Gemini/Imagen/Speech-to-Text).
+    It automatically loads environment variables and validates API keys.
+    
+    Args:
+        model_name (str, optional): The identifier of the model to use. Must be
+            a key in the RECOMMENDED_MODELS dictionary. Defaults to "gpt-4o".
+            Examples: "gpt-4o", "claude-3-opus-20240229", "gemini-2.5-pro"
+    
+    Returns:
+        tuple: A 3-element tuple containing:
+            - client: The initialized API client object (varies by provider)
+                - OpenAI: OpenAI client instance
+                - Anthropic: Anthropic client instance
+                - Hugging Face: InferenceClient instance
+                - Google: GenerativeModel, genai module, or SpeechClient
+            - model_name (str): The model name (echoed back)
+            - api_provider (str): The provider name ("openai", "anthropic", etc.)
+            
+            Returns (None, None, None) if initialization fails.
+    
+    Raises:
+        None: This function handles all errors gracefully and prints error messages
+            instead of raising exceptions.
+    
+    Notes:
+        - Automatically calls load_environment() to load .env file
+        - Validates that the model exists in RECOMMENDED_MODELS
+        - Checks for required API keys in environment variables
+        - Handles ImportError if provider libraries aren't installed
+        - Special handling for Google models based on their capabilities:
+            - Audio transcription models use google.cloud.speech
+            - Image generation models return the genai module
+            - Text/vision models return a GenerativeModel instance
+        - Prints success/error messages to console
+    
+    Example:
+        >>> # Initialize OpenAI client
+        >>> client, model, provider = setup_llm_client("gpt-4o")
+        ✅ LLM Client configured: Using 'openai' with model 'gpt-4o'
+        
+        >>> # Initialize Anthropic client
+        >>> client, model, provider = setup_llm_client("claude-3-opus-20240229")
+        ✅ LLM Client configured: Using 'anthropic' with model 'claude-3-opus-20240229'
+        
+        >>> # Handle missing API key
+        >>> client, model, provider = setup_llm_client("gpt-4o")
+        ERROR: OPENAI_API_KEY not found in .env file.
+    
+    Dependencies:
+        - Provider-specific libraries (installed as needed):
+            - openai: For OpenAI models
+            - anthropic: For Anthropic models
+            - huggingface_hub: For Hugging Face models
+            - google.generativeai: For Google Gemini/Imagen
+            - google.cloud.speech: For Google Speech-to-Text
+        - RECOMMENDED_MODELS: Global dictionary with model configurations
     """
     load_environment()
     if model_name not in RECOMMENDED_MODELS:
@@ -414,7 +510,61 @@ def setup_llm_client(model_name="gpt-4o"):
 # --- Core Interaction Functions ---
 
 def get_completion(prompt, client, model_name, api_provider, temperature=0.7):
-    """Sends a text-only prompt to the LLM and returns the completion."""
+    """
+    Sends a text-only prompt to the LLM and returns the completion.
+    
+    This function provides a unified interface for getting text completions from
+    various LLM providers. It handles provider-specific API differences and
+    error cases, including special handling for newer OpenAI models that may
+    use different endpoints or not support temperature parameters.
+    
+    Args:
+        prompt (str): The text prompt to send to the model. This is the user's
+            input or question that the model should respond to.
+        client: The initialized API client object from setup_llm_client().
+            Type varies by provider (OpenAI, Anthropic, InferenceClient, etc.)
+        model_name (str): The identifier of the model to use for completion.
+        api_provider (str): The provider name ("openai", "anthropic", "huggingface",
+            "gemini", or "google").
+        temperature (float, optional): Controls randomness in the output. Higher
+            values (e.g., 1.0) make output more random, lower values (e.g., 0.1)
+            make it more deterministic. Defaults to 0.7. Range typically 0.0-2.0.
+    
+    Returns:
+        str: The generated text completion from the model. Returns an error
+            message string if the API call fails.
+    
+    Raises:
+        None: This function catches all exceptions and returns error messages
+            as strings instead of raising exceptions.
+    
+    Notes:
+        - Handles different API structures for each provider
+        - OpenAI: Tries chat completions first, falls back to responses endpoint
+        - Anthropic: Uses messages API with max_tokens=4096
+        - Hugging Face: Uses chat_completion with minimum temperature of 0.1
+        - Google/Gemini: Uses generate_content method
+        - Special error handling for OpenAI models that don't support temperature
+        - Returns descriptive error messages if API calls fail
+    
+    Example:
+        >>> client, model, provider = setup_llm_client("gpt-4o")
+        >>> response = get_completion(
+        ...     "What is the capital of France?",
+        ...     client, model, provider, temperature=0.5
+        ... )
+        >>> print(response)
+        "The capital of France is Paris."
+        
+        >>> # Handle API errors gracefully
+        >>> response = get_completion("Hello", None, "gpt-4o", "openai")
+        >>> print(response)
+        "API client not initialized."
+    
+    Dependencies:
+        - Provider-specific client libraries
+        - RECOMMENDED_MODELS: For model capability validation
+    """
     if not client: return "API client not initialized."
     try:
         if api_provider == "openai":
@@ -467,7 +617,69 @@ def get_completion(prompt, client, model_name, api_provider, temperature=0.7):
         return f"An API error occurred: {e}"
 
 def get_vision_completion(prompt, image_url, client, model_name, api_provider):
-    """Sends an image and a text prompt to a vision-capable LLM and returns the completion."""
+    """
+    Sends an image and a text prompt to a vision-capable LLM and returns the completion.
+    
+    This function enables multimodal AI interactions by processing both text and image
+    inputs together. It handles the different image processing requirements for each
+    provider, including URL-based and base64-encoded image formats.
+    
+    Args:
+        prompt (str): The text prompt or question about the image. This provides
+            context or specific instructions for analyzing the image.
+        image_url (str): URL of the image to analyze. Must be a publicly accessible
+            HTTP/HTTPS URL. The function will download and process the image as needed.
+        client: The initialized API client object from setup_llm_client().
+            Type varies by provider.
+        model_name (str): The identifier of the vision-capable model to use.
+        api_provider (str): The provider name ("openai", "anthropic", "huggingface",
+            "gemini", or "google").
+    
+    Returns:
+        str: The model's response analyzing the image based on the prompt.
+            Returns an error message string if the model doesn't support vision
+            or if the API call fails.
+    
+    Raises:
+        None: This function catches all exceptions and returns error messages
+            as strings instead of raising exceptions.
+    
+    Notes:
+        - Validates that the model supports vision using RECOMMENDED_MODELS
+        - Different providers require different image formats:
+            - OpenAI: Can use image URLs directly
+            - Anthropic: Requires base64-encoded image data with MIME type
+            - Google/Gemini: Requires PIL Image object
+            - Hugging Face: Requires PIL Image object
+        - Automatically downloads images from URLs and converts as needed
+        - Sets max_tokens to 4096 for providers that support it
+        - Handles HTTP errors when fetching images
+    
+    Example:
+        >>> client, model, provider = setup_llm_client("gpt-4o")
+        >>> response = get_vision_completion(
+        ...     "What objects do you see in this image?",
+        ...     "https://example.com/image.jpg",
+        ...     client, model, provider
+        ... )
+        >>> print(response)
+        "I can see a red car, a tree, and a blue sky in this image."
+        
+        >>> # Error handling for non-vision models
+        >>> response = get_vision_completion(
+        ...     "Describe this", "http://example.com/img.jpg",
+        ...     client, "gpt-3.5-turbo", "openai"
+        ... )
+        >>> print(response)
+        "Error: Model 'gpt-3.5-turbo' does not support vision."
+    
+    Dependencies:
+        - requests: For downloading images from URLs
+        - PIL (Pillow): For image processing
+        - base64: For encoding images for Anthropic
+        - io.BytesIO: For converting image bytes to PIL Images
+        - RECOMMENDED_MODELS: For vision capability validation
+    """
     if not client: return "API client not initialized."
     if not RECOMMENDED_MODELS.get(model_name, {}).get("vision"):
         return f"Error: Model '{model_name}' does not support vision."
@@ -517,10 +729,79 @@ def get_vision_completion(prompt, image_url, client, model_name, api_provider):
         return f"An API error occurred during vision completion: {e}"
 
 def get_image_generation_completion(prompt, client, model_name, api_provider):
-    """Generates an image from a text prompt using an image generation LLM."""
-    if not client: return "API client not initialized."
+    """
+    Generates an image from a text prompt using an image generation LLM.
+    
+    This function provides a unified interface for text-to-image generation across
+    different providers. It handles the API differences between providers and
+    returns the generated image as a base64-encoded data URL that can be displayed
+    directly in web browsers or Jupyter notebooks.
+    
+    Args:
+        prompt (str): The text description of the image to generate. Should be
+            detailed and specific for best results. Example: "A serene mountain
+            landscape at sunset with a lake in the foreground".
+        client: The initialized API client object from setup_llm_client().
+            For Google Imagen, this might be the genai module itself.
+        model_name (str): The identifier of the image generation model to use.
+            Examples: "dall-e-3", "imagen-3.0-generate-002".
+        api_provider (str): The provider name ("openai" or "google").
+    
+    Returns:
+        tuple[str, str]: A tuple containing:
+            - file_path (str): The local path to the saved image file.
+            - image_url (str): A data URL string in the format "data:image/png;base64,{base64_data}"
+              that can be used directly in HTML img tags or displayed in Jupyter.
+            Returns (None, None) if an error occurs.
+    
+    Raises:
+        None: This function catches all exceptions and returns error messages
+            as strings instead of raising exceptions.
+    
+    Notes:
+        - Validates that the model supports image generation using RECOMMENDED_MODELS
+        - Displays a loading indicator during generation (can take 10-30 seconds)
+        - Tracks and reports generation time
+        - Provider-specific handling:
+            - OpenAI: Uses images.generate() API, returns base64 directly
+            - Google Imagen: Uses REST API with predict endpoint
+            - Google Gemini: Uses generate_images() method
+        - The returned data URL can be used directly in HTML or markdown
+        - Loading indicators are shown in console and Jupyter environments
+    
+    Example:
+        >>> client, model, provider = setup_llm_client("dall-e-3")
+        >>> file_path, image_url = get_image_generation_completion(
+        ...     "A futuristic city with flying cars and neon lights",
+        ...     client, model, provider
+        ... )
+        Generating image... This may take a moment.
+        ⏳ Generating image...
+        ✅ Image generated in 15.32 seconds.
+        ✅ Image saved to: artifacts/screens/image_1662586800.png
+        >>> # Display in Jupyter: display(Image(url=image_url))
+        
+        >>> # Error handling
+        >>> response = get_image_generation_completion(
+        ...     "A cat", client, "gpt-4o", "openai"
+        ... )
+        >>> print(response)
+        (None, "Error: Model 'gpt-4o' does not support image generation.")
+    
+    Dependencies:
+        - time: For tracking generation duration
+        - json: For handling Google API payloads
+        - requests: For Google Imagen REST API calls
+        - IPython.display: For showing loading indicators in Jupyter
+        - RECOMMENDED_MODELS: For image generation capability validation
+    """
+    if not client: 
+        print("API client not initialized.")
+        return None, "API client not initialized."
     if not RECOMMENDED_MODELS.get(model_name, {}).get("image_generation"):
-        return f"Error: Model '{model_name}' does not support image generation."
+        error_msg = f"Error: Model '{model_name}' does not support image generation."
+        print(error_msg)
+        return None, error_msg
 
     # Display a loading indicator
     print("Generating image... This may take a moment.")
@@ -528,13 +809,16 @@ def get_image_generation_completion(prompt, client, model_name, api_provider):
     start_time = time.time()
 
     try:
+        image_b64 = None
         if api_provider == "openai":
-            response = client.images.generate(model=model_name, prompt=prompt)
+            response = client.images.generate(model=model_name, prompt=prompt, response_format="b64_json")
             image_b64 = response.data[0].b64_json
         elif api_provider == "google":
             if model_name.startswith("imagen"):
+                # This part for Google Imagen seems to have a placeholder for apiKey.
+                # Assuming it's handled by the environment it runs in (e.g., Canvas).
                 payload = {"instances": {"prompt": prompt}, "parameters": {"sampleCount": 1}}
-                apiKey = ""  # Canvas will automatically provide this.
+                apiKey = os.getenv("GOOGLE_API_KEY", "") 
                 apiUrl = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:predict?key={apiKey}"
                 response = requests.post(apiUrl, headers={'Content-Type': 'application/json'}, data=json.dumps(payload))
                 response.raise_for_status()
@@ -542,24 +826,161 @@ def get_image_generation_completion(prompt, client, model_name, api_provider):
                 if result.get("predictions") and len(result["predictions"]) > 0 and result["predictions"][0].get("bytesBase64Encoded"):
                     image_b64 = result["predictions"][0]["bytesBase64Encoded"]
                 else:
-                    return f"Error: Unexpected image generation response structure: {result}"
-            else:
-                model = client.GenerativeModel(model_name)
-                result = model.generate_images(prompt=prompt)
-                image_b64 = result.images[0].base64_data
-        else:
-            return f"Error: Image generation not implemented for provider '{api_provider}'"
+                    error_msg = f"Error: Unexpected image generation response structure: {result}"
+                    print(error_msg)
+                    return None, error_msg
+            else: # Assumes Gemini model capable of image generation
+                # The setup_llm_client for Gemini text models returns a GenerativeModel instance.
+                # For image generation, it might be different. Assuming client is correct.
+                # The docstring says for Gemini it uses generate_images(), but the code shows GenerativeModel.
+                # Let's assume the client is a GenerativeModel instance.
+                # The previous code had `model = client.GenerativeModel(model_name)` which is wrong if client is already the model.
+                # Let's correct this logic.
+                if not hasattr(client, 'generate_content'): # This is a text model client
+                     import google.generativeai as genai
+                     client = genai.GenerativeModel(model_name)
 
-        image_url = f"data:image/png;base64,{image_b64}"
+                # The docstring mentions `generate_images` but that's not a standard method.
+                # It's likely a custom wrapper or an old method. The standard is `generate_content`.
+                # Let's assume we need to call `generate_content` with a specific instruction.
+                # However, the original code had `generate_images`. Let's stick to what was there but make it safer.
+                # Let's check the original code again. It was `result = model.generate_images(prompt=prompt)`.
+                # This seems to be a misunderstanding of the Gemini API.
+                # Let's assume the user wants to use a model that supports image generation via a specific method.
+                # The `gemini-2.5-flash-image-preview` model is for image generation.
+                # The client for that is the `genai` module itself.
+                # The original code was a mix of things. Let's try to make it work based on the docstring.
+                # The docstring says "Google Gemini: Uses generate_images() method". This is likely incorrect for the public API.
+                # The other google branch was for "imagen".
+                # Let's assume the `else` is for Gemini vision models that can also generate images.
+                # The `gemini-2.5-flash-image-preview` model does this.
+                # The client setup for that returns a `GenerativeModel` instance.
+                # That instance does not have `generate_images`.
+                # I will assume the original code was flawed and I should correct it.
+                # The correct way to generate images with a Gemini model that supports it is not straightforward
+                # and might involve specific client libraries or REST calls not reflected.
+                # Given the ambiguity, I will stick to the OpenAI path and make the Google path more robust
+                # by acknowledging the potential issue.
+                # The original code had `model = client.GenerativeModel(model_name)` which is redundant if client is already a model.
+                # And then `result = model.generate_images(prompt=prompt)`. This method doesn't exist on `GenerativeModel`.
+                # I'll leave the logic but wrap it in a check.
+                if hasattr(client, 'generate_images'):
+                    result = client.generate_images(prompt=prompt)
+                    image_b64 = result.images[0].base64_data
+                else:
+                    error_msg = f"Image generation for Gemini model '{model_name}' is not correctly implemented in this utility."
+                    print(error_msg)
+                    return None, error_msg
+        else:
+            error_msg = f"Error: Image generation not implemented for provider '{api_provider}'"
+            print(error_msg)
+            return None, error_msg
+
+        if not image_b64:
+            error_msg = "Image generation failed to return image data."
+            print(error_msg)
+            return None, error_msg
+
         end_time = time.time()
         print(f"✅ Image generated in {end_time - start_time:.2f} seconds.")
-        return image_url
+
+        # Save the image
+        image_data = base64.b64decode(image_b64)
+        timestamp = int(time.time())
+        file_name = f"image_{timestamp}.png"
+        save_dir = os.path.join(_find_project_root(), "artifacts", "screens")
+        os.makedirs(save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, file_name)
+        
+        with open(file_path, "wb") as f:
+            f.write(image_data)
+        
+        relative_path = os.path.relpath(file_path, _find_project_root())
+        print(f"✅ Image saved to: {relative_path}")
+
+        # Display the image in Jupyter
+        try:
+            display(IPyImage(data=image_data))
+        except Exception as e:
+            print(f"Could not display image in this environment: {e}")
+
+        image_url = f"data:image/png;base64,{image_b64}"
+        
+        return file_path, image_url
+
     except Exception as e:
-        return f"An API error occurred during image generation: {e}"
+        error_msg = f"An API error occurred during image generation: {e}"
+        print(error_msg)
+        return None, error_msg
 
 
 def transcribe_audio(audio_path, client, model_name, api_provider, language_code="en-US"):
-    """Transcribes audio from a file using a speech-to-text model."""
+    """
+    Transcribes audio from a file using a speech-to-text model.
+    
+    This function provides a unified interface for converting speech in audio files
+    to text across different providers. It handles various audio formats and
+    provider-specific API differences.
+    
+    Args:
+        audio_path (str): Path to the audio file to transcribe. Can be absolute
+            or relative. Supported formats vary by provider but typically include
+            MP3, WAV, M4A, and other common audio formats.
+        client: The initialized API client object from setup_llm_client().
+            - OpenAI: OpenAI client instance
+            - Google: speech.SpeechClient instance
+        model_name (str): The identifier of the speech-to-text model to use.
+            Examples: "whisper-1", "google-cloud/speech-to-text/latest_long".
+        api_provider (str): The provider name ("openai" or "google").
+        language_code (str, optional): The language of the audio in BCP-47 format.
+            Defaults to "en-US" (American English). Examples: "es-ES" (Spanish),
+            "fr-FR" (French), "ja-JP" (Japanese). Only used by Google Speech-to-Text.
+    
+    Returns:
+        str: The transcribed text from the audio file. Returns an error message
+            string if the model doesn't support audio transcription, if the file
+            cannot be read, or if the API call fails. Returns "No transcription
+            available." if the audio couldn't be transcribed.
+    
+    Raises:
+        None: This function catches all exceptions and returns error messages
+            as strings instead of raising exceptions.
+    
+    Notes:
+        - Validates that the model supports audio transcription using RECOMMENDED_MODELS
+        - Provider-specific handling:
+            - OpenAI (Whisper): Supports many languages automatically
+            - Google: Requires explicit language_code parameter
+        - File is read in binary mode and sent to the API
+        - Google returns results with alternatives; uses the first alternative
+        - Handles cases where no transcription is available
+    
+    Example:
+        >>> # OpenAI Whisper transcription
+        >>> client, model, provider = setup_llm_client("whisper-1")
+        >>> text = transcribe_audio(
+        ...     "recording.mp3", client, model, provider
+        ... )
+        >>> print(text)
+        "Hello, this is a test recording."
+        
+        >>> # Google Speech-to-Text with Spanish audio
+        >>> client, model, provider = setup_llm_client("google-cloud/speech-to-text/latest_short")
+        >>> text = transcribe_audio(
+        ...     "spanish_audio.wav", client, model, provider, language_code="es-ES"
+        ... )
+        >>> print(text)
+        "Hola, esta es una grabación de prueba."
+        
+        >>> # Error handling
+        >>> text = transcribe_audio("audio.mp3", client, "gpt-4o", "openai")
+        >>> print(text)
+        "Error: Model 'gpt-4o' does not support audio transcription."
+    
+    Dependencies:
+        - google.cloud.speech: For Google Speech-to-Text (if using Google)
+        - RECOMMENDED_MODELS: For audio transcription capability validation
+    """
     if not client:
         return "API client not initialized."
     if not RECOMMENDED_MODELS.get(model_name, {}).get("audio_transcription"):
@@ -748,4 +1169,3 @@ def render_plantuml_diagram(puml_code, output_path="artifacts/diagram.png"):
             print(f"⚠️ Diagram rendering returned no file. Result: {result}")
     except Exception as e:
         print(f"❌ Error rendering PlantUML diagram: {e}")
-

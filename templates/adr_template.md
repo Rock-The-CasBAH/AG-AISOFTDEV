@@ -1,20 +1,35 @@
-# Title: [A short, descriptive title for the decision]
+Here's a reusable Architectural Decision Record (ADR) template in markdown format:
 
-**Status:** [Proposed | Accepted | Deprecated | Superseded]
+```markdown
+# Title: [Decision Title]
+
+**Status:** [Proposed | Accepted | Deprecated]
 
 ## Context
-- [Describe the problem, the driving forces, and the constraints.]
+[Describe the problem, constraints, and forces influencing the decision. Include any relevant background information or business requirements that are driving this decision.]
 
 ## Decision
-- [State the chosen solution clearly and concisely.]
+[State the decision clearly and explain the rationale behind it. Describe the solution you have chosen and why it is preferred over other alternatives.]
 
 ## Consequences
-- [List the positive outcomes, negative trade-offs, and any future work required.]
+[List the expected benefits and potential drawbacks of the decision. Discuss both the positive and negative impacts it may have on the system or organization.]
+
+- **Positive Outcomes:** 
+  - [Benefit 1]
+  - [Benefit 2]
+  - [Additional benefits...]
+
+- **Negative Outcomes:**
+  - [Drawback 1]
+  - [Drawback 2]
+  - [Additional drawbacks...]
+
+## Notes
+[Include any additional context, references to related documents, or links to further readings. This section can also contain notes about the implementation plan, stakeholders involved, or any assumptions and dependencies related to the decision.]
 ```
 
-### Usage Notes:
-- **Title:** Summarize the decision in a way that can be easily referenced.
-- **Status:** Reflect the current state of the decision. Update this status as the decision evolves through its lifecycle.
-- **Context:** Provide sufficient background to understand why this decision is necessary. Include information about stakeholders, technical constraints, and any relevant historical context.
-- **Decision:** Clearly articulate the decision that has been made. Include any relevant technical details or specifications that support the decision.
-- **Consequences:** Highlight the anticipated impact of the decision. Consider both the benefits and potential downsides. Note any further actions that will be necessary to implement or revisit the decision.
+### Usage Instructions:
+- Replace placeholders (e.g., `[Decision Title]`, `[Describe the problem, constraints, and forces influencing the decision.]`) with actual content.
+- Choose the appropriate status in the "Status" section.
+- Use bullet points where necessary for clarity and organization.
+- Ensure this document is kept up-to-date in a version-controlled repository to track the evolution of architectural decisions over time.
