@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Sidebar Component
 const Sidebar = () => (
   <div className="w-20 bg-white border-r p-4 flex flex-col items-center">
@@ -46,13 +44,16 @@ const OnboardingOverview = () => (
 );
 
 // Task Item Component
-const TaskItem = ({ text, checked = false, date, dateColor }) => (
-  <li className="flex items-center">
-    <input type="checkbox" className="mr-2" checked={checked} readOnly />
-    <span>{text}</span>
-    {date && <span className={`ml-auto text-sm text-white ${dateColor} px-2 py-1 rounded`}>{date}</span>}
-  </li>
-);
+const TaskItem = ({ text, checked = false, date, dateColor }) => {
+  const id = `task-${text.replace(/\s+/g, '-').toLowerCase()}`;
+  return (
+    <li className="flex items-center">
+      <input type="checkbox" id={id} className="mr-2" checked={checked} readOnly />
+      <label htmlFor={id}>{text}</label>
+      {date && <span className={`ml-auto text-sm text-white ${dateColor} px-2 py-1 rounded`}>{date}</span>}
+    </li>
+  );
+};
 
 // Team Dashboard Component
 const TeamDashboard = () => (
@@ -108,4 +109,7 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<Dashboard />);

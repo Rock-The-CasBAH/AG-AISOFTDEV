@@ -1,10 +1,15 @@
-# Convenience wrapper so `uvicorn main:app` works from the project root.
-# It imports the FastAPI app instance from the inner `app/main.py` module.
+"""Proxy module to expose the FastAPI ASGI app at the repository root.
 
-from app.main import app
+This lets `uvicorn main:app` work when the real application lives in
+`app/main.py` (module `app.main`).
+"""
 
-# When run directly this will start uvicorn (useful for local debugging)
+from app.main import app  # re-export FastAPI instance for uvicorn
+
+__all__ = ["app"]
+
 if __name__ == "__main__":
+    # Allow running with: python main.py
     import uvicorn
 
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
