@@ -20,15 +20,41 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f0f2f5;
+            /* use the generated sepia background image */
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
             padding: 1rem;
             box-sizing: border-box;
+            /* a very light translucent overlay so text is always readable */
+            color: #111827;
+        }
+        /* add a subtle overlay layer using a pseudo-element on body */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: rgba(250, 240, 225, 0.55); /* light sepia wash */
+            pointer-events: none;
+        }
+        /* Larger, bolder styling for the standalone "Team Gemini" text */
+        .hero {
+            font-size: 3rem; /* large heading */
+            font-weight: 800; /* extra bold */
+            line-height: 2.1;
+            color: #0b1220; /* dark slate for good contrast */
+            letter-spacing: -0.02em;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+            z-index: 2;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-
+    <div id="root" class="hero">Team Gemini</div>
+    <div id="root">  <Dashboard /> </div>
     <script type="text/babel" src="></script>
+    <script type="text/babel" src="app\day8_login_refactored.jsx"></script>
+
 </body>
 </html>

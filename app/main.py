@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Text, Date, CheckConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 # from sqlalchemy.orm import relationship, declarative_base
 from pydantic import BaseModel
+from pathlib import Path
 from typing import List, Optional
 from sqlalchemy.exc import SQLAlchemyError
 # from models import Base
@@ -29,8 +29,9 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     role = Column(String, nullable=False)
+    # single-element tuple requires a trailing comma so SQLAlchemy accepts it as a tuple
     __table_args__ = (
-                  CheckConstraint("role IN ('New Hire', 'HR Manager', 'Department Manager')"))
+                  CheckConstraint("role IN ('New Hire', 'HR Manager', 'Department Manager')"),)
 
     # Establish a one-to-many relationship with onboarding_tasks
     onboarding_tasks = relationship('OnboardingTask', back_populates='user', cascade='all, delete-orphan')
@@ -68,17 +69,25 @@ class OnboardingTask(Base):
     description = Column(Text)
     due_date = Column(String)
     status = Column(String, nullable=False, default='Pending')
+    # single-element tuple requires a trailing comma so SQLAlchemy accepts it as a tuple
     __table_args__ = (
-                    CheckConstraint("status IN ('Pending', 'Completed')"))
+                    CheckConstraint("status IN ('Pending', 'Completed')"),)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
     # Establish a many-to-one relationship with users
     user = relationship('User', back_populates='onboarding_tasks')
 
 # SQLite connection string and engine creation with connection arguments to handle threading
-DATABASE_URL = "sqlite:///./onboarding.db"
+# Prefer the seeded DB under the repository's `artifacts/` directory. Fall back to the
+# repository-root `onboarding.db` for backward compatibility.
+project_root = Path(__file__).resolve().parents[1]
+db_path = project_root / "artifacts" / "onboarding.db"
+if not db_path.exists():
+    # fallback to repo root onboarding.db
+    db_path = project_root / "onboarding.db"
+DATABASE_URL = f"sqlite:///{db_path.as_posix()}"
 engine = create_engine(
-    DATABASE_URL, 
+    DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
 
@@ -299,7 +308,6 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 # Convenience wrapper so `uvicorn main:app` works from the project root.
 # It imports the FastAPI app instance from the inner `app/main.py` module.
-
 # When run directly this will start uvicorn (useful for local debugging)
 if __name__ == "__main__":
     import uvicorn
