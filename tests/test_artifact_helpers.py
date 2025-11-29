@@ -18,7 +18,7 @@ def test_save_and_load_under_artifacts_simple():
     # Save without the 'artifacts/' prefix; should go to artifacts/<path>
     rel_path = 'test_artifacts/simple.txt'
     content = 'hello world'
-    save_artifact(content, rel_path)
+    save_artifact(content, rel_path, overwrite=True)
 
     # Verify file exists under artifacts
     expected = os.path.join(artifacts_root(), rel_path)
@@ -29,7 +29,7 @@ def test_save_and_load_under_artifacts_simple():
 def test_save_and_load_with_artifacts_prefix():
     rel_path = 'artifacts/test_artifacts/prefixed.txt'
     content = 'prefixed content'
-    save_artifact(content, rel_path)
+    save_artifact(content, rel_path, overwrite=True)
 
     expected = os.path.join(_find_project_root(), rel_path)
     assert os.path.exists(expected)

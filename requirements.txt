@@ -1,71 +1,72 @@
 # Project dependencies for running all notebooks and Python scripts
-# Grouped by purpose; pin versions for core runtime libraries
+# Grouped by purpose with pinned versions for reproducibility
+# Last updated: November 2025
 
 # Web frameworks and API
-fastapi
-uvicorn
-sqlalchemy
-pydantic
-flask
+fastapi>=0.119.0
+uvicorn>=0.37.0
+SQLAlchemy>=2.0.44
+pydantic>=2.12.2
+flask>=3.0.3
 
 # Testing
-pytest
+pytest>=8.4.2
 pytest-asyncio
-responses
+responses>=0.25.8
 
 # Environment helpers
-python-dotenv
-jupyter
-ipywidgets
+python-dotenv>=1.1.1
+jupyter>=1.0.0
+ipywidgets>=8.1.2
 
 # Web UI
-streamlit
+streamlit>=1.47.1
 
 # Agent frameworks / tooling
-autogen
-crewai
-pyautogen
-smolagents
-langchain
-langchain-core
-langchain-community
-langchain-openai
-langgraph
-a2a-protocol
-mcp
-langchain-mcp
+autogen>=0.9.9
+crewai>=0.150.0
+pyautogen>=0.9.0
+smolagents>=1.20.0
+langchain>=0.3.27
+langchain-core>=0.3.79
+langchain-community>=0.3.27
+langchain-openai>=0.3.35
+langgraph>=0.6.10
+a2a-protocol>=0.1.0
+mcp>=1.18.0
+langchain-mcp>=0.2.1
 
 # RAG / Vector stores / Document loaders
-faiss-cpu
-pypdf
-sentence-transformers
+faiss-cpu>=1.11.0
+pypdf>=5.8.0
+sentence-transformers>=3.1.1
 
 # Model infra & huggingface
-transformers
-huggingface_hub
-accelerate
-datasets
-torch
-torchvision
-torchaudio
+transformers>=4.56.2
+huggingface_hub>=0.35.3
+accelerate>=1.0.1
+datasets>=2.19.1
+torch>=2.8.0
+torchvision>=0.23.0
+torchaudio>=2.8.0
 
 # Model providers & tokenization
-openai
-tiktoken
-anthropic
-google-generativeai
-google-genai
+openai>=2.4.0
+tiktoken>=0.12.0
+anthropic>=0.71.0
+google-generativeai>=0.8.5
+google-genai>=1.40.0
 
 # Utilities and data
-requests
-pandas
-numpy
-matplotlib
-seaborn
-scikit-learn
-plantuml
-colorama
+requests>=2.32.5
+pandas>=2.2.2
+numpy>=1.26.4
+matplotlib>=3.9.2
+seaborn>=0.13.2
+scikit-learn>=1.7.2
+plantuml>=0.3.0
+colorama>=0.4.6
 
 # Misc (community / integrations)
-tavily-python
-weaviate-client
+tavily-python>=0.7.10
+weaviate-client>=4.16.10

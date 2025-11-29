@@ -1,6 +1,6 @@
 # WARP.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+This file provides guidance to AI assistants (WARP, Gemini, etc.) when working with code in this repository.
 
 ## Repository Overview
 
@@ -71,17 +71,17 @@ docker run -p 8000:8000 --env-file .env ai-software-engineering
 
 ### Core Components
 
-**`utils.py` - Unified AI Interface**
-The heart of this repository is the `utils.py` module, which provides a standardized interface for multiple AI providers (OpenAI, Anthropic, Hugging Face, Google Gemini). It includes:
+**`utils/` - Unified AI Interface Module**
+The heart of this repository is the `utils/` module, which provides a standardized interface for multiple AI providers (OpenAI, Anthropic, Hugging Face, Google Gemini). Key files include:
 
-- `RECOMMENDED_MODELS`: Comprehensive model configuration database with capabilities metadata
-- `setup_llm_client()`: Provider-agnostic client initialization
-- `get_completion()`: Text-only completions
-- `get_vision_completion()`: Multimodal image + text processing
-- `get_image_generation_completion()`: Text-to-image generation
-- `get_image_edit_completion()`: Image editing capabilities
-- `transcribe_audio()`: Speech-to-text processing
-- `prompt_enhancer()`: Meta-prompt optimization system
+- `llm.py`: Core LLM functions (`get_completion()`, `get_vision_completion()`, `setup_llm_client()`)
+- `models.py`: Model configuration database with `RECOMMENDED_MODELS` and capabilities metadata
+- `providers/`: Provider-specific implementations for each AI provider
+- `image_gen.py`: Image generation and editing (`get_image_generation_completion()`, `get_image_edit_completion()`)
+- `audio.py`: Speech-to-text processing (`transcribe_audio()`)
+- `artifacts.py`: Artifact saving/loading with path resolution
+- `helpers.py`: Shared utility functions
+- `errors.py`: Custom exception classes
 
 ### Educational Structure
 
@@ -124,12 +124,13 @@ Organized by days (Day_01 through Days_9_and_10) with:
 
 ### Working with AI Providers
 
-When adding new AI provider integrations, follow the established pattern in `utils.py`:
+When adding new AI provider integrations, follow the established pattern in `utils/`:
 
-1. Add model configuration to `RECOMMENDED_MODELS` with capability flags
-2. Implement provider-specific client setup in `setup_llm_client()`
-3. Add provider handling to relevant completion functions
-4. Update model filtering in `recommended_models_table()`
+1. Add model configuration to `RECOMMENDED_MODELS` in `utils/models.py` with capability flags
+2. Create a new provider file in `utils/providers/`
+3. Implement provider-specific client setup in `setup_llm_client()` in `utils/llm.py`
+4. Add provider handling to relevant completion functions
+5. Update model filtering in `recommended_models_table()`
 
 ### Testing Considerations
 
@@ -141,8 +142,8 @@ When adding new AI provider integrations, follow the established pattern in `uti
 ### Jupyter Notebook Development
 
 - Notebooks expect activated virtual environment with installed dependencies
-- Use `utils.py` functions for consistent AI provider interactions
-- Save artifacts using `save_artifact()` for proper path management
+- Use `utils` module functions for consistent AI provider interactions
+- Save artifacts using `utils.artifacts.save_artifact()` for proper path management
 - Display generated content using provided display helpers
 
 ### Docker Considerations
@@ -158,7 +159,7 @@ This repository teaches AI-assisted development across the full SDLC:
 - **Week 1**: AI-powered planning, design, development, testing, and basic agents
 - **Week 2**: Advanced RAG systems, multi-agent workflows, vision, and capstone projects
 
-The `utils.py` module serves as the foundation for all AI interactions throughout the course, providing students with a consistent interface regardless of which provider or model they choose to use.
+The `utils/` module serves as the foundation for all AI interactions throughout the course, providing students with a consistent interface regardless of which provider or model they choose to use.
 
 ## API Key Requirements
 
