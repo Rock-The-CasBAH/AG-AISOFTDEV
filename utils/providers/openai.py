@@ -218,12 +218,18 @@ def vision_completion(
         }]
         
         # Make the API call
-        response = client.chat.completions.create(
-            model=model_name,
-            messages=messages,
-            max_tokens=4096,
-            timeout=TOTAL_TIMEOUT,
-        )
+        # o3/o3-mini models require max_completion_tokens instead of max_tokens
+        call_params = {
+            "model": model_name,
+            "messages": messages,
+            "timeout": TOTAL_TIMEOUT,
+        }
+        if model_name.startswith(("o3", "o3-")):
+            call_params["max_completion_tokens"] = 4096
+        else:
+            call_params["max_tokens"] = 4096
+        
+        response = client.chat.completions.create(**call_params)
         
         # Extract text from response
         return response.choices[0].message.content
@@ -285,12 +291,18 @@ async def async_vision_completion(
         }]
         
         # Make the API call
-        response = await client.chat.completions.create(
-            model=model_name,
-            messages=messages,
-            max_tokens=4096,
-            timeout=TOTAL_TIMEOUT,
-        )
+        # o3/o3-mini models require max_completion_tokens instead of max_tokens
+        call_params = {
+            "model": model_name,
+            "messages": messages,
+            "timeout": TOTAL_TIMEOUT,
+        }
+        if model_name.startswith(("o3", "o3-")):
+            call_params["max_completion_tokens"] = 4096
+        else:
+            call_params["max_tokens"] = 4096
+        
+        response = await client.chat.completions.create(**call_params)
         
         # Extract text from response
         return response.choices[0].message.content
