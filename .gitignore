@@ -53,7 +53,10 @@ htmlcov/
 .pytest_cache/
 
 # Project-specific config and entry files to ignore
+async_tests/
 pytest.ini
+pyproject.toml
+.pre-commit-config.yaml
 
 # Dockerfile variants (covering common filename casing)
 dockerfile
