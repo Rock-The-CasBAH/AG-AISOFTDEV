@@ -10,14 +10,20 @@ from .settings import display, Markdown
 # Models verified as of December 2025.
 RECOMMENDED_MODELS: Dict[str, Dict[str, Any]] = {
     # ===== OpenAI Models =====
+    # GPT-4o Series (Multimodal)
     "gpt-4o": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 128_000, "output_tokens": 16_384},
     "gpt-4o-mini": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 128_000, "output_tokens": 16_384},
+    # GPT-4.1 Series (Coding-optimized)
     "gpt-4.1": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 1_000_000, "output_tokens": 32_768},
     "gpt-4.1-mini": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 1_000_000, "output_tokens": 32_000},
     "gpt-4.1-nano": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 1_000_000, "output_tokens": 32_000},
+    # o-Series Reasoning Models (Latest)
     "o3": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 200_000, "output_tokens": 100_000},
     "o3-mini": {"provider": "openai", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 200_000, "output_tokens": 100_000},
+    "o4-mini": {"provider": "openai", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 200_000, "output_tokens": 100_000},
+    # Image Generation
     "dall-e-3": {"provider": "openai", "vision": False, "text_generation": False, "image_generation": True, "image_modification": False, "audio_transcription": False, "context_window_tokens": None, "output_tokens": None},
+    # Audio Transcription
     "gpt-4o-transcribe": {"provider": "openai", "vision": False, "text_generation": False, "image_generation": False, "image_modification": False, "audio_transcription": True, "context_window_tokens": None, "output_tokens": None},
     "gpt-4o-mini-transcribe": {"provider": "openai", "vision": False, "text_generation": False, "image_generation": False, "image_modification": False, "audio_transcription": True, "context_window_tokens": None, "output_tokens": None},
     "whisper-1": {"provider": "openai", "vision": False, "text_generation": False, "image_generation": False, "image_modification": False, "audio_transcription": True, "context_window_tokens": None, "output_tokens": None},
@@ -42,13 +48,16 @@ RECOMMENDED_MODELS: Dict[str, Dict[str, Any]] = {
     "gemini-2.5-flash-image-preview": {"provider": "google", "vision": False, "text_generation": False, "image_generation": True, "image_modification": True, "audio_transcription": False, "context_window_tokens": 32_768, "output_tokens": 32_768},
     
     # ===== HuggingFace Models =====
+    # Vision-Language Models
+    "Qwen/Qwen3-VL-235B-A22B-Instruct": {"provider": "huggingface", "vision": True, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 32_768, "output_tokens": 8_192},
     # Text Generation
     "meta-llama/Llama-4-Scout-17B-16E-Instruct": {"provider": "huggingface", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 1_000_000, "output_tokens": 100_000},
     "meta-llama/Llama-4-Maverick-17B-128E-Instruct": {"provider": "huggingface", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 1_000_000, "output_tokens": 100_000},
     "meta-llama/Llama-3.3-70B-Instruct": {"provider": "huggingface", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 8_192, "output_tokens": 4_096},
     "deepseek-ai/DeepSeek-V3.1": {"provider": "huggingface", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 128_000, "output_tokens": 100_000},
     "MiniMaxAI/MiniMax-M2": {"provider": "huggingface", "vision": False, "text_generation": True, "image_generation": False, "image_modification": False, "audio_transcription": False, "context_window_tokens": 128_000, "output_tokens": 8_192},
-    # Image Generation
+    # Image Generation/Modification
+    "black-forest-labs/FLUX.2-dev": {"provider": "huggingface", "vision": False, "text_generation": False, "image_generation": False, "image_modification": True, "audio_transcription": False, "context_window_tokens": None, "output_tokens": None},
     "black-forest-labs/FLUX.1-Kontext-dev": {"provider": "huggingface", "vision": False, "text_generation": False, "image_generation": False, "image_modification": True, "audio_transcription": False, "context_window_tokens": None, "output_tokens": None},
     "stabilityai/stable-diffusion-3.5-large": {"provider": "huggingface", "vision": False, "text_generation": False, "image_generation": True, "image_modification": False, "audio_transcription": False, "context_window_tokens": None, "output_tokens": None},
 }

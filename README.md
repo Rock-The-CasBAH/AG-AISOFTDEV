@@ -14,18 +14,22 @@ Whether you are self-paced or teaching in a classroom, this README explains how 
 
 | Path | Description |
 | --- | --- |
-| `Labs/` | Student-facing Jupyter notebooks organised by day (`Day_01_...` through `Days_9_and_10_Capstone`). Each notebook scaffolds a hands-on lab aligned with the daily learning objectives. |
-| `Solutions/` | Fully worked notebooks that mirror the lab structure. These are the reference implementations instructors can demo or students can review after attempting a lab. |
-| `Supporting Materials/` | Long-form documentation that supplements the labs: setup instructions, Docker walkthroughs, artifact management, React viewing tips, and more. |
-| `templates/` | Markdown templates for Product Requirements Documents (PRDs), Architectural Decision Records (ADRs), evaluation rubrics, and other reusable assets. |
-| `slides/` | Presentation decks that support each day’s lectures. |
-| `utils/` | The Python package that powers AI interactions across the curriculum. It wraps provider SDKs (OpenAI, Anthropic, Google, Hugging Face, etc.), enforces artifact safety rules, and exposes helpers used throughout the labs. |
+| `Labs/` | Student-facing Jupyter notebooks organised by day (`Day_01_...` through `Days_9_and_10_Capstone`). Each notebook scaffolds a hands-on lab aligned with the daily learning objectives. Also includes `Agent_notebooks/` and `Day_07_MCP_and_A2A/` with additional agent-focused exercises. |
+| `Solutions/` | Fully worked notebooks that mirror the lab structure (`Day_01` through `Day_08`). These are the reference implementations instructors can demo or students can review after attempting a lab. |
+| `Supporting Materials/` | Long-form documentation that supplements the labs: setup instructions, Docker walkthroughs, artifact management, React viewing tips, GitHub Copilot reference guide, VS Code best practices, API key generation guide, and more. Also includes a `Starter_Utils_Demo.ipynb` notebook demonstrating core utilities. |
+| `templates/` | Markdown templates for Product Requirements Documents (PRDs), Architectural Decision Records (ADRs), and other reusable assets. |
+| `Slides/` | Presentation decks (`day1.html` through `day8.html`) that support each day's lectures. |
+| `utils/` | The Python package that powers AI interactions across the curriculum. It wraps provider SDKs (OpenAI, Anthropic, Google, Hugging Face, etc.), enforces artifact safety rules, and exposes helpers used throughout the labs. Key modules include `llm.py`, `image_gen.py`, `audio.py`, `artifacts.py`, `models.py`, `settings.py`, `rate_limit.py`, `http.py`, `plantuml.py`, `logging.py`, and provider-specific implementations in `providers/`. |
 | `tests/` | Fast unit tests for the utilities package (all safe to run offline). Integration and slow tests are annotated with pytest markers. |
-| `async_tests/` | Dedicated asyncio test coverage that demonstrates parallel LLM calls and provider patching patterns. |
-| `pyproject.toml`, `requirements.txt`, `pytest.ini` | Tooling configuration for formatters, dependency management, and test execution. |
+| `artifacts/` | Generated course outputs including sample apps, A2A protocol examples (`a2a_requester.py`, `a2a_responder.py`), database schemas, Dockerfile, chat UI, and reference implementations for the onboarding tool project. |
+| `pyproject.toml` | Project metadata and tool configuration for Black, isort, Ruff, and mypy. |
+| `requirements.txt` | Pinned Python dependencies covering web frameworks, testing, agent tooling (AutoGen, CrewAI, LangChain, LangGraph, MCP, smolagents), RAG components, model providers, and utilities. |
+| `.pre-commit-config.yaml` | Pre-commit hooks configuration for Black, isort, Ruff, and mypy. |
 | `Daily agenda.ipynb` | Instructor agenda covering the minute-by-minute plan for the two-week experience. |
+| `GLOSSARY.md` | Terminology reference for key AI and software engineering concepts covered in the course. |
+| `agent.md` | Guidance document for AI coding assistants working with this repository. |
 
-> **Tip:** The repository intentionally starts without an `app/` or `artifacts/` directory. Those assets are produced inside the labs; you can always peek at the corresponding notebook in `Solutions/` if you want a completed reference.
+> **Tip:** The `artifacts/` directory contains generated outputs from the labs. You can always peek at the corresponding notebook in `Solutions/` if you want a completed reference.
 
 ---
 
@@ -90,22 +94,33 @@ OPENAI_API_KEY="sk-..."          # required for most labs
 ANTHROPIC_API_KEY="..."          # optional
 GOOGLE_API_KEY="..."             # optional for Gemini-based labs
 HUGGINGFACE_API_KEY="hf_..."     # optional for open-source experiments
+TAVILY_API_KEY="tvly-..."        # optional for web search in agent labs
 ```
 
 The utilities package automatically loads this file via `python-dotenv` when you call `utils.load_environment()` or any helper that depends on provider credentials.
 
-### 6. Validate Your Environment
+### 6. (Optional) Set Up Pre-commit Hooks
+
+The repository includes a `.pre-commit-config.yaml` for automatic code formatting and linting:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+This will run Black, isort, Ruff, and mypy on staged files before each commit.
+
+### 7. Validate Your Environment
 
 Run the quick checks below after installing dependencies. They confirm that Python can import the utilities package and that pytest is configured correctly.
 
 ```bash
 pytest tests
-pytest async_tests
 ```
 
 > **Integration tests:** Files such as `tests/test_text_generation.py` contain `@pytest.mark.integration` markers and require real API keys plus network access. Skip them by default with `pytest -m "not integration"` unless you explicitly want to hit provider endpoints.
 
-### 7. Open the Lab Notebooks
+### 8. Open the Lab Notebooks
 
 Start Jupyter Notebook or JupyterLab from the repository root:
 
@@ -126,8 +141,11 @@ The `utils` package consolidates course-wide helpers. Key modules include:
 * `utils.audio` – Speech-to-text wrappers (and compatibility layers for legacy tuple-returning helpers).
 * `utils.artifacts` – Safe file persistence with directory sandboxing. Used heavily in labs to store generated assets.
 * `utils.settings` – Environment loading, Jupyter display shortcuts (`Markdown`, `IPyImage`, `PlantUML`), and global configuration helpers.
+* `utils.models` – Model configuration database with `RECOMMENDED_MODELS` and capabilities metadata.
 * `utils.rate_limit` & `utils.http` – Provider-aware throttling and shared HTTP session utilities for production scenarios.
 * `utils.logging` – Structured loggers that standardise output across notebooks and scripts.
+* `utils.plantuml` – PlantUML diagram rendering utilities.
+* `utils.providers/` – Provider-specific implementations for OpenAI, Anthropic, Google, and Hugging Face.
 
 A minimal text completion flow looks like this:
 
@@ -145,14 +163,13 @@ response = get_completion(
 print(response)
 ```
 
-To parallelise prompts, pair `async_setup_llm_client()` with `async_get_completion()` inside an `asyncio.gather` call. The `async_tests/test_async_llm.py` file demonstrates this pattern in a test harness.
+To parallelise prompts, pair `async_setup_llm_client()` with `async_get_completion()` inside an `asyncio.gather` call.
 
 ---
 
 ## 🧪 Testing and Quality Gates
 
 * **Unit tests:** `pytest tests` exercises artifact helpers, logging, HTTP wrappers, and synchronous compatibility shims without leaving your machine.
-* **Async coverage:** `pytest async_tests` verifies concurrency helpers.
 * **Integration tests:** Opt-in suites marked with `@pytest.mark.integration` call live provider APIs (text, vision, audio, and image generation). Run them only after supplying valid keys: `pytest -m integration`.
 * **Slow tests:** Image workflows that may take 10–30 seconds each use `@pytest.mark.slow`. Combine markers to run them selectively, e.g. `pytest -m "integration and slow"`.
 
@@ -170,6 +187,9 @@ The `Supporting Materials/` directory contains detailed guides that extend this 
 * **Deployment Guide (Onboarding Tool)** – Blueprint for stitching the Day 1–Day 7 artifacts into a full-stack onboarding assistant, including container choices and wiring diagrams.
 * **React Components Viewing Guide** – Zero-build workflow for rendering JSX snippets generated during the front-end labs.
 * **Productionizing Utils** – Environment variables, rate limiting, logging, and retry configuration for taking the helper library beyond notebooks.
+* **GitHub Copilot Reference Guide** – Best practices for leveraging GitHub Copilot throughout the course.
+* **VS Code Copilot Best Practices** – Tips for configuring and using Copilot effectively in VS Code.
+* **Starter Utils Demo** – A notebook (`Starter_Utils_Demo.ipynb`) demonstrating core utility functions.
 
 Each document has been refreshed to match the utilities and lab artifacts in this repository. Start there whenever you need deeper context or run into an edge case during class.
 
@@ -180,8 +200,9 @@ Each document has been refreshed to match the utilities and lab artifacts in thi
 This repository is primarily used in a facilitated training environment. When proposing improvements:
 
 1. Fork the repository or create a feature branch (if you have write access).
-2. Install dependencies and run `pytest tests` plus any affected async or integration suites.
-3. Submit a pull request describing the change and how it supports the curriculum.
+2. Install dependencies and run `pytest tests` plus any affected integration suites.
+3. Run `pre-commit run --all-files` to ensure code style compliance.
+4. Submit a pull request describing the change and how it supports the curriculum.
 
 For classroom delivery, instructors typically:
 

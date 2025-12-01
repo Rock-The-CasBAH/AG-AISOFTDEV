@@ -218,13 +218,13 @@ def vision_completion(
         }]
         
         # Make the API call
-        # o3/o3-mini models require max_completion_tokens instead of max_tokens
+        # o-series reasoning models require max_completion_tokens instead of max_tokens
         call_params = {
             "model": model_name,
             "messages": messages,
             "timeout": TOTAL_TIMEOUT,
         }
-        if model_name.startswith(("o3", "o3-")):
+        if model_name.startswith(("o3", "o4")):
             call_params["max_completion_tokens"] = 4096
         else:
             call_params["max_tokens"] = 4096
@@ -291,13 +291,13 @@ async def async_vision_completion(
         }]
         
         # Make the API call
-        # o3/o3-mini models require max_completion_tokens instead of max_tokens
+        # o-series reasoning models require max_completion_tokens instead of max_tokens
         call_params = {
             "model": model_name,
             "messages": messages,
             "timeout": TOTAL_TIMEOUT,
         }
-        if model_name.startswith(("o3", "o3-")):
+        if model_name.startswith(("o3", "o4")):
             call_params["max_completion_tokens"] = 4096
         else:
             call_params["max_tokens"] = 4096
