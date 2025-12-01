@@ -94,6 +94,18 @@
         .syntax-list.chevrons-only li::before {
             content: '»'; /* Double chevron */
         }
+        @media print {
+            body { background-color: white; color: black; }
+            .card { background-color: #f7fafc; box-shadow: none; border: 1px solid #e2e8f0; }
+            header, nav { display: none; }
+            .collapsible-content { max-height: none !important; overflow: visible; }
+            .collapsible-header .arrow { display: none; }
+            .highlight, .accent-text { color: #2b6cb0; }
+            .code-block { background-color: #f7fafc; border: 1px solid #e2e8f0; color: #1a202c; }
+            .spark-creativity { background-color: #fffaf0; border-left-color: #dd6b20; }
+            button { display: none; }
+            a { color: #2b6cb0; }
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -399,7 +411,7 @@ print("Custom MCP Server example structure defined.")</code></pre>
             <div class="mb-6">
                 <h4 class="text-xl font-semibold text-gray-200 mb-2">Resources for MCP:</h4>
                 <ul class="syntax-list">
-                    <li><span class="highlight">Official MCP Documentation:</span> <a href="https://docs.anthropic.com/en/docs/mcp" target="_blank" rel="noopener" class="accent-text hover:underline">https://docs.anthropic.com/en/docs/mcp</a></li>
+                    <li><span class="highlight">Official MCP Documentation:</span> <a href="https://modelcontextprotocol.io/docs" target="_blank" rel="noopener" class="accent-text hover:underline">https://modelcontextprotocol.io/docs</a> (Anthropic, Nov 2024)</li>
                     <li><span class="highlight">Python SDK:</span> <a href="https://github.com/modelcontextprotocol/python-sdk" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/modelcontextprotocol/python-sdk</a></li>
                     <li><span class="highlight">LangChain MCP Adapters:</span> <a href="https://github.com/langchain-ai/langchain-mcp-adapters" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/langchain-ai/langchain-mcp-adapters</a></li>
                     <li><span class="highlight">Community Examples:</span> <a href="https://github.com/modelcontextprotocol/examples" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/modelcontextprotocol/examples</a></li>
@@ -955,11 +967,10 @@ class A2AAgentServer:
             <div class="mb-6">
                 <h4 class="text-xl font-semibold text-gray-200 mb-2">Resources for A2A:</h4>
                 <ul class="syntax-list">
-                    <li><span class="highlight">Official A2A Documentation:</span> <a href="https://a2a-protocol.org/latest/" target="_blank" rel="noopener" class="accent-text hover:underline">https://a2a-protocol.org/latest/</a></li>
-                    <li><span class="highlight">Python SDK Reference:</span> <a href="https://a2a-protocol.org/latest/sdk/python/" target="_blank" rel="noopener" class="accent-text hover:underline">https://a2a-protocol.org/latest/sdk/python/</a></li>
-                    <li><span class="highlight">Tutorial Series:</span> <a href="https://a2a-protocol.org/latest/tutorials/python/1-introduction/" target="_blank" rel="noopener" class="accent-text hover:underline">https://a2a-protocol.org/latest/tutorials/python/1-introduction/</a></li>
-                    <li><span class="highlight">GitHub Repository:</span> <a href="https://github.com/a2a-protocol/python-sdk" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/a2a-protocol/python-sdk</a></li>
-                    <li><span class="highlight">Community Forum:</span> <a href="https://community.a2a-protocol.org" target="_blank" rel="noopener" class="accent-text hover:underline">https://community.a2a-protocol.org</a></li>
+                    <li><span class="highlight">Official A2A Documentation:</span> <a href="https://google.github.io/A2A/" target="_blank" rel="noopener" class="accent-text hover:underline">https://google.github.io/A2A/</a> (Google, April 2025)</li>
+                    <li><span class="highlight">GitHub Repository:</span> <a href="https://github.com/google/A2A" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/google/A2A</a></li>
+                    <li><span class="highlight">Python Samples:</span> <a href="https://github.com/google/A2A/tree/main/samples/python" target="_blank" rel="noopener" class="accent-text hover:underline">https://github.com/google/A2A/tree/main/samples/python</a></li>
+                    <li><span class="highlight">A2A Specification:</span> <a href="https://google.github.io/A2A/specification/" target="_blank" rel="noopener" class="accent-text hover:underline">https://google.github.io/A2A/specification/</a></li>
                 </ul>
             </div>
         </section>

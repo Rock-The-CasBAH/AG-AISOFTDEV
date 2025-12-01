@@ -94,6 +94,18 @@
         .syntax-list.chevrons-only li::before {
             content: '»'; /* Double chevron */
         }
+        @media print {
+            body { background-color: white; color: black; }
+            .card { background-color: #f7fafc; box-shadow: none; border: 1px solid #e2e8f0; }
+            header, nav { display: none; }
+            .collapsible-content { max-height: none !important; overflow: visible; }
+            .collapsible-header .arrow { display: none; }
+            .highlight, .accent-text { color: #2b6cb0; }
+            .code-block { background-color: #f7fafc; border: 1px solid #e2e8f0; color: #1a202c; }
+            .spark-creativity { background-color: #fffaf0; border-left-color: #dd6b20; }
+            button { display: none; }
+            a { color: #2b6cb0; }
+        }
     </style>
 </head>
 <body class="antialiased">
